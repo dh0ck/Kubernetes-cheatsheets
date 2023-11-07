@@ -78,3 +78,54 @@ k create ingress <ingress name> -n <namespace> --rule="/pay=pay-service:8082"
 k expose <resource kind> <resource name> -n <namespace>
 k expose deploy ingress-controller -n ingress-space --name ingress --port=80 --target-port=80 --type NodePort
 ```
+
+# Commands to modify existing objects
+```bash
+# Replace an existing configuration of a replica set after modifying a definition file
+kubectl replace -f replicaset-definition.yml
+
+# Change the number of replicas in a replica set by updating the defintion file
+kubectl scale --replicas=6 -f replicaset-definition.yml
+
+# Change the number of replicas in a replica set without updating the definition file
+kubectl scale --replicas=6 replicaset <nombre de replicaset>
+
+# Edit in real time the configuration of a replicaset to apply changes without restart
+kubectl edit replicaset <name>
+kubectl edit rs <name>
+
+# Rollout of a deployment to the previous version (if anything went wrong during a deploy)
+# With the "history" command all deployments can be seen. Doing this changes the number. 
+# For example, if there were 3 versions, if we revert to version 2, version 2 disappears from the list
+# and version 4 appears. It will be the last version chronologically, but its equal to version 2
+kubectl rollout undo deployment/myapp-deployment
+
+# Change the image used in a deployment to a different version
+kubectl set image <deployment name> <container name> nginx=nginx:1.18-perl --record
+
+# Change the default namespacee (what comes next makes the former dev namespace to become the default one,
+# and we don't need to write --namespace=dev to refer to it in kubectl commands). This doesn't mean that
+now dev is called default. Default still is another namespace, but to access it, we need  --namespace=default
+kubectl config set-context $(kubectl config current-context) --namespace=dev
+
+# Apply a taint to a node (taint-effect says what happens to nodes that don't support that taint
+# (NoSchedule | PreferNoSchedule | NoExecute))
+kubectl taint nodes node-name key=value:taint-effect
+
+# Example of taint
+kubectl taint nodes <node name> <key>=<value>:<effect>
+kubectl taint nodes node1 app=blue:NoSchedule
+
+# Add toleration to pod
+kubectl taint nodes node1 app=blue: NoSchedule
+
+# Add label to a node, so that a pod with that pod selector can run only on that node
+kubectl label nodes <node name> <label key>=<label value>
+
+# If we edit a definition file and it doesn't allow to updated the running object, instead of deleting it 
+# and create it again, we can do:
+kubectl replace --force -f <file yaml>
+
+# Return to the previous version of a deployment
+kubectl rollout undo <deployment>
+```
